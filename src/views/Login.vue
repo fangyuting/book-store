@@ -293,7 +293,6 @@ export default {
             api.users.register(this.currentInfo).then((res) => {
               console.log(res);
               const { status, data, msg } = res;
-
               if (status == 1005) {
                 Message({
                   message: '账号已被注册',

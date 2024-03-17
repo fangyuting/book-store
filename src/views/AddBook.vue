@@ -36,9 +36,19 @@
                 v-model="bookInfo.bookType"
               ></el-cascader>
             </el-form-item>
-            <el-form-item prop="bookPrice">
-              <span>价格</span>
-              <el-input type="number" v-model="bookInfo.bookPrice"></el-input>
+            <el-form-item prop="bookOriginPrice">
+              <span>书籍原价</span>
+              <el-input
+                type="number"
+                v-model="bookInfo.bookOriginPrice"
+              ></el-input>
+            </el-form-item>
+            <el-form-item prop="bookCurrentPrice">
+              <span>书籍现价</span>
+              <el-input
+                type="number"
+                v-model="bookInfo.bookCurrentPrice"
+              ></el-input>
             </el-form-item>
           </el-form>
           <!-- <button @click="next" class="btn">下一步</button> -->
@@ -100,6 +110,7 @@
 
 <script>
 import api from '../api';
+import { Message } from 'element-ui';
 export default {
   data() {
     return {
@@ -109,7 +120,8 @@ export default {
         bookTitle: '',
         bookAuthor: '',
         bookType: '',
-        bookPrice: 0.0
+        bookOriginPrice: 0.0,
+        bookCurrentPrice: 0.0
       },
       rules: {
         bookTitle: [
@@ -121,127 +133,126 @@ export default {
         bookType: [
           { required: true, message: '请选择书籍类型', trigger: 'blur' }
         ],
-        bookPrice: [
-          { required: true, message: '请填写书籍价格', trigger: 'blur' }
+        bookOriginPrice: [
+          { required: true, message: '请填写书籍原价', trigger: 'blur' }
+        ],
+        bookCurrentPrice: [
+          { required: true, message: '请填写书籍现价', trigger: 'blur' }
         ]
       },
       bookTypeOptions: [
         {
-          value: 'zhinan',
+          value: 'BasicSubjects',
           label: '基础学科',
           children: [
             {
-              value: 'yizhi',
+              value: 'math',
               label: '数学'
             },
             {
-              value: 'fankui',
+              value: 'physics',
               label: '物理'
             },
             {
-              value: 'xiaolv',
+              value: 'chemical',
               label: '化学'
             },
             {
-              value: 'kekong',
+              value: 'biology',
               label: '生物'
             },
             {
-              value: 'kekong',
+              value: 'english',
               label: '英语'
             },
             {
-              value: 'kekong',
+              value: 'computerBasics',
               label: '计算机基础'
             }
           ]
         },
         {
-          value: 'zujian',
+          value: 'professionalCourses',
           label: '专业课程',
           children: [
             {
-              value: 'basic',
+              value: 'economics',
               label: '经济学'
             },
             {
-              value: 'basic',
+              value: 'management',
               label: '管理学'
             },
             {
-              value: 'basic',
+              value: 'jurisprudence',
               label: '法学'
             },
             {
-              value: 'basic',
+              value: 'literature',
               label: '文学'
             },
             {
-              value: 'basic',
+              value: 'history',
               label: '历史学'
             },
             {
-              value: 'basic',
+              value: 'engineer',
               label: '工学'
             },
             {
-              value: 'basic',
+              value: 'medicine',
               label: '医学'
             },
             {
-              value: 'basic',
+              value: 'pedagogy',
               label: '教育学'
             },
             {
-              value: 'basic',
+              value: 'psychology',
               label: '心理学'
             }
           ]
         },
         {
-          value: 'ziyuan',
+          value: 'examCertification',
           label: '考试认证',
           children: [
             {
-              value: 'axure',
+              value: 'computerGradeExam',
               label: '计算机等级考试'
             },
             {
-              value: 'sketch',
+              value: 'CET',
               label: '英语四六级'
             },
             {
-              value: 'jiaohu',
+              value: 'IELTSTOEFL',
               label: '雅思托福'
             },
             {
-              value: 'jiaohu',
+              value: 'CPA',
               label: '注册会计师(CPA)'
             },
             {
-              value: 'jiaohu',
+              value: 'teacherCertificate',
               label: '教师资格证'
             }
           ]
         },
         {
-          value: 'ziyuan',
+          value: 'tool',
           label: '工具书',
           children: [
             {
-              value: 'axure',
+              value: 'dictionary',
               label: '字典'
             },
             {
-              value: 'sketch',
-              label: '词典'
-            },
-            {
-              value: 'jiaohu',
+              value: 'manual',
               label: '手册'
             },
             {
-              value: 'jiaohu',
+              value: 'guide',
               label: '指南'
             }
           ]
@@ -265,12 +276,17 @@ export default {
             }
           });
         });
+      } else {
+        if (this.active++ > 2) this.active = 0;
       }
     },
     back() {
       if (this.active-- < 0) this.active = 0;
     },
-    goToSetting() {},
+    // 设置
+    goToSetting() {
+      this.$router.push('/MyPage');
+    },
     // 上传书籍
     triggerUpload() {
       // 触发文件上传
@@ -318,22 +334,33 @@ export default {
     // 上传文件
     uploadFile(file) {
       if (!this.selectedFile) {
-        return;
+        return Promise.reject(new Error('No file selected'));
       }
       var reader = new FileReader();
-      reader.readAsDataURL(this.selectedFile);
-      reader.onloadend = function () {
-        var fileurl = reader.result;
-        console.log(fileurl);
-        // 这里有一个向后端发送的请求
-        api.books
-          .postimg({
-            files: fileurl
-          })
-          .then((res) => {
-            console.log(res);
-          });
-      };
+      // reader.readAsDataURL(this.selectedFile);
+      return new Promise((resolve, reject) => {
+        reader.onloadend = function () {
+          var fileurl = reader.result;
+          console.log(fileurl);
+          // 这里有一个向后端发送的请求
+          api.books
+            .postimg({
+              files: fileurl
+            })
+            .then((res) => {
+              if (res.status === 200) {
+                console.log('res', res);
+                resolve(res.filePath);
+              } else {
+                reject(new Error('Upload failed'));
+              }
+            })
+            .catch((error) => {
+              reject(error);
+            });
+        };
+        reader.readAsDataURL(this.selectedFile);
+      });
     },
     // 下载文件
     downloadFile() {
@@ -344,14 +371,52 @@ export default {
     // 上传书本信息
     uploadBookInfo() {
       // this.uploadFile(this.selectedFile);
-      const params = {
-        bookDesc: this.bookDesc,
-        ...this.bookInfo
-      };
-      console.log(params);
-      api.books.uploadNewBook(params).then((res) => {
-        console.log(res);
-      });
+      this.uploadFile(this.selectedFile)
+        .then((filePath) => {
+          // 上传文件成功
+          console.log('uploadResult', filePath);
+          // 继续上传书本信息
+          const ownerId = this.$store.state.users.userInfo.id;
+          this.bookInfo.bookOriginPrice = Number(this.bookInfo.bookOriginPrice);
+          this.bookInfo.bookCurrentPrice = Number(
+            this.bookInfo.bookCurrentPrice
+          );
+
+          const params = {
+            bookDesc: this.bookDesc,
+            ...this.bookInfo,
+            ownerId,
+            bookImgPath: filePath
+          };
+          // 上传书本信息
+          return api.books.uploadNewBook(params);
+        })
+        .then((res) => {
+          if (res.status === 200) {
+            console.log('Book uploaded successfully');
+            Message({
+              type: 'success',
+              message: '添加图书成功'
+            });
+            this.bookInfo = {
+              bookTitle: '',
+              bookAuthor: '',
+              bookType: '',
+              bookOriginPrice: 0.0,
+              bookCurrentPrice: 0.0
+            };
+            this.selectedFile = ''; // 用于存储选定的文件名称
+            this.downloadHref = null; // 用于存储下载链接
+            this.bookDesc = ''; // 书本描述信息
+            this.active = 0;
+            this.$router.replace('/home');
+          } else {
+            console.error('Failed to upload book');
+          }
+        })
+        .catch((error) => {
+          console.error('An error occurred:', error);
+        });
     }
   }
 };
@@ -373,7 +438,6 @@ export default {
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid #fed19c;
     color: #fff;
 
     .logo {

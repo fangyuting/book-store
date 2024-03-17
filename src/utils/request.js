@@ -8,7 +8,11 @@ let requests = axios.create({
   // baseURL:'/api'
   // 5秒之内无反应则自动请求失败
   timeout: 5000,
-  baseURL: '/api'
+  baseURL: '/api',
+  headers: {
+    // 为了不进行预处理请求需要用这样格式的数据
+    'Content-Type': 'application/x-www-form-urlencoded'
+  }
 });
 
 // 请求拦截器: 在发送请求之前可以检测到，可以在请求发送出去之前做一些事情
@@ -34,11 +38,11 @@ requests.interceptors.request.use(
 requests.interceptors.response.use(
   (res) => {
     console.log(res);
-    if (res.data.status === 200) {
+    if (res.data.status === 200 || res.status === 200) {
       setCookie(res.data.token);
     }
     // 无效token/token过期
-    if (res.data.status == 401) {
+    if (res.data.status === 401) {
       Message({
         message: '登录过期',
         type: 'warning',

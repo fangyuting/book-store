@@ -4,6 +4,9 @@ import Home from '../views/Home';
 import Login from '../views/Login';
 import MyPage from '../views/MyPage';
 import AddBook from '../views/AddBook';
+import BookDetail from '../views/BookDetail';
+import ShoppingCart from '../views/ShoppingCart';
+import Favorites from '../views/Favorites';
 
 Vue.use(VueRouter);
 
@@ -14,9 +17,24 @@ const routes = [
     component: Home
   },
   {
+    path: '/BookDetail',
+    name: 'BookDetail',
+    component: BookDetail
+  },
+  {
     path: '/',
     name: 'login',
     component: Login
+  },
+  {
+    path: '/shoppingCart',
+    name: 'shoppingCart',
+    component: ShoppingCart
+  },
+  {
+    path: '/Favorites',
+    name: 'Favorites',
+    component: Favorites
   },
   {
     path: '/MyPage',

@@ -35,7 +35,7 @@
         />
       </div>
       <div class="content">
-        <el-breadcrumb separator-class="el-icon-arrow-right">
+        <el-breadcrumb separator-class="el-icon-arrow-right" class="breadcrumb">
           <el-breadcrumb-item>{{ selectedMenu }}</el-breadcrumb-item>
         </el-breadcrumb>
         <div class="bookList">
@@ -68,7 +68,7 @@
               </div>
             </div>
           </div>
-          <div v-else>{{ selectedMenu }} 暂时还没有出售的图书</div>
+          <span v-else class="noContent">该分类暂时还没有出售的图书</span>
         </div>
       </div>
     </div>

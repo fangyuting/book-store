@@ -39,7 +39,7 @@
             <span class="price">￥{{ item.bookInfo.currentPrice }}</span>
             <div class="status">
               <el-button class="purchasing" v-if="item.bookInfo.status === 0">
-                代售
+                待售
               </el-button>
               <el-button type="success" v-if="item.bookInfo.status === 1">
                 已售出

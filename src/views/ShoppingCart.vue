@@ -27,29 +27,54 @@
           v-for="(item, index) in shoppingCartList"
           :key="index"
           class="list"
-          @click="goToBookDetail(item)"
         >
           <img :src="item.bookInfo.bookImgPath" alt="" class="bookImg" />
           <div class="content">
-            <span class="title">{{ item.bookInfo.bookTitle }}</span>
-            <div class="tag">
-              <el-tag type="success">{{ item.bookInfo.typeLevel1 }}</el-tag>
-              <el-tag type="warning">{{ item.bookInfo.typeLevel2 }}</el-tag>
+            <div class="left">
+              <span class="title">{{ item.bookInfo.bookTitle }}</span>
+              <div class="tag">
+                <el-tag type="success">{{ item.bookInfo.typeLevel1 }}</el-tag>
+                <el-tag type="warning">{{ item.bookInfo.typeLevel2 }}</el-tag>
+              </div>
             </div>
-            <span class="price">￥{{ item.bookInfo.currentPrice }}</span>
-            <div class="status">
-              <el-button class="purchasing" v-if="item.bookInfo.status === 0">
-                代售
-              </el-button>
-              <el-button type="success" v-if="item.bookInfo.status === 1">
-                已售出
-              </el-button>
+            <div class="right">
+              <span class="price">￥{{ item.bookInfo.currentPrice }}</span>
+              <div class="status">
+                <el-button
+                  class="purchasing"
+                  v-if="item.bookInfo.status === 0"
+                  @click="placeOrder(item)"
+                >
+                  购买
+                </el-button>
+                <el-button
+                  type="info"
+                  v-if="item.bookInfo.status === 1"
+                  disabled
+                >
+                  已售出
+                </el-button>
+              </div>
             </div>
           </div>
+          <i
+            class="icon-quxiao iconfont deleteBtn"
+            @click="deleteBook(item)"
+          ></i>
         </div>
       </div>
+      <div v-if="flag === true" class="placeAllOrder">
+        <hr class="hr" />
+        <div class="sum">
+          <span>总计:</span>
+          <span class="price">{{ this.sum }}</span>
+        </div>
+        <el-button class="placeAllOrderBtn" @click="placeAllOrderBtn"
+          >一键下单全部书籍</el-button
+        >
+      </div>
       <div v-else class="noContent">
-        <span>暂无收藏记录</span>
+        <span>暂无购买记录</span>
       </div>
     </div>
   </div>
@@ -63,7 +88,8 @@ export default {
     return {
       shoppingCartList: [],
       search: '',
-      flag: false
+      flag: false,
+      sum: 0
     };
   },
   activated() {
@@ -87,13 +113,16 @@ export default {
       this.$router.push('/MyPage');
     },
     // 获取购物车
-    getMyShoppingCart() {
+    async getMyShoppingCart() {
       const id = this.$store.state.users.userInfo.id;
-      api.shoppingCart.getMyShoppingCart(id).then((res) => {
+      await api.shoppingCart.getMyShoppingCart(id).then((res) => {
         if (res.status === 200) {
           this.shoppingCartList = [];
-          res.data.forEach((item) => this.shoppingCartList.push(item));
-          console.log(this.shoppingCartList);
+          this.sum = 0;
+          res.data.forEach((item) => {
+            this.shoppingCartList.push(item);
+            this.sum += item.bookInfo.currentPrice;
+          });
           this.flag = true;
         } else if (res.status === 201) {
           this.shoppingCartList = [];
@@ -104,13 +133,38 @@ export default {
           });
         }
       });
-    }
+    },
+    // 删除购物车书籍
+    async deleteBook(item) {
+      const params = {
+        id: item.id,
+        owner: item.owner,
+        shopBook: item.shopBook
+      };
+      await api.shoppingCart.deleteShoppingCartBook(params).then((res) => {
+        console.log(res);
+        if (res.status === 200) {
+          Message({
+            type: 'success',
+            message: '删除成功'
+          });
+          this.getMyShoppingCart();
+        }
+      });
+    },
+    // 购买单本书籍
+    async placeOrder(item) {
+      console.log(item);
+    },
+    // 一键购买所有书籍
+    async placeAllOrderBtn() {}
   }
 };
 </script>
 
 <style lang="less" scoped>
 .shoppingCart {
+  height: 100vh;
   .header {
     width: 100%;
     height: 80px;
@@ -178,7 +232,7 @@ export default {
     border-radius: 10px;
     box-shadow: 0 0 10px #fed19c;
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     justify-content: center;
     align-items: flex-start;
     padding: 30px 0;
@@ -189,6 +243,7 @@ export default {
       flex-wrap: wrap;
       height: 100%;
       overflow-y: auto;
+      justify-content: center;
       /* 自定义滚动条样式 */
       scrollbar-width: thin; /* 指定滚动条宽度 */
     }
@@ -226,48 +281,107 @@ export default {
     .list {
       display: flex;
       flex-direction: row;
-      width: 90%;
+      width: 92%;
+      height: 220px;
       margin: 25px 25px;
       transition: all 0.2s linear;
       cursor: pointer;
       border-radius: 5px;
-      padding: 8px 0;
+      padding: 8px 10px 8px 0;
 
       .bookImg {
         width: 200px;
         height: 200px;
       }
       .content {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
         margin-top: 10px;
-        .title {
-          font-size: 18px;
-          font-weight: 600;
-        }
-        .tag {
-          margin: 15px 0;
-          .el-tag {
-            margin-right: 15px;
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        .left {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          justify-content: space-around;
+          .title {
+            font-size: 18px;
+            font-weight: 600;
+          }
+          .tag {
+            margin: 15px 0;
+            .el-tag {
+              margin-right: 15px;
+            }
           }
         }
+        .right {
+          display: flex;
+          flex-direction: column;
+          justify-content: space-around;
+          align-items: flex-end;
+          .price {
+            font-size: 22px;
+            font-weight: 700;
+          }
+          .status {
+            margin-top: 30px;
+            .purchasing {
+              background-color: #fed19c;
+              color: #fff;
+              width: 77px;
+              height: 35px;
+              border: none;
+            }
+            .el-button,
+            button {
+              padding: 8px 13px;
+            }
+          }
+        }
+      }
+      .deleteBtn {
+        font-size: 38px;
+        position: relative;
+        right: -10px;
+        top: -10px;
+        height: 38px;
+        color: #fff;
+        background: #fed19c;
+        border-radius: 5px 10px;
+      }
+    }
+    .list:hover {
+      box-shadow: 0 0 5px #fed19c;
+    }
+    .placeAllOrder {
+      width: 90%;
+      margin: 0px auto;
+      .hr {
+        border: 1px solid rgba(254, 209, 156, 0.5);
+      }
+      .sum {
+        line-height: 38px;
+        margin-top: 10px;
+        float: left;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
         .price {
-          font-size: 22px;
-          font-weight: 700;
+          font-size: 26px;
+          font-weight: 500;
+          padding: 0 10px;
         }
-        .status {
-          margin-top: 30px;
-          .purchasing {
-            background-color: #fed19c;
-            color: #fff;
-            border: none;
-          }
-          .el-button,
-          button {
-            padding: 8px 13px;
-          }
-        }
+      }
+      .placeAllOrderBtn {
+        margin-top: 10px;
+        float: right;
+      }
+      .placeAllOrderBtn:hover {
+        border: 1px solid #fed19c;
+        background-color: rgba(254, 209, 156, 0.3);
+        color: #fed19c;
       }
     }
     .noContent {

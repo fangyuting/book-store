@@ -9,5 +9,9 @@ export default {
   // 获取购物车
   getMyShoppingCart(id) {
     return request.get(`/shoppingCart/getMyShoppingCart?owner=${id}`);
+  },
+  // 删除购物车书籍
+  deleteShoppingCartBook(data) {
+    return request.post(`/shoppingCart/deleteShoppingCartBook`, data);
   }
 };
